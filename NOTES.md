@@ -69,3 +69,14 @@ Copy the folder to a GitHub repository and enable GitHub Pages from the root, or
 ## Author
 
 Aariv Patel. PlainPage is a Code for Humanity project.
+
+## Refinement Pass 2026-10-24
+
+- Wiring proof. New `scripts/dom-smoke.js` loads the real markup into a minimal DOM stub, runs the three shipped scripts in order, and drives every panel flow (tabs, samples, jargon apply and reset, bench run, clipboard copy, dial verdicts, clear). 25 checks pass, so the init path and each interaction execute without throwing. The HTML has no duplicate ids and every id app.js references resolves.
+- Fixed. The term list textarea was styled by the selector `.jargon-list textarea`, which matched nothing because the class lives on the hits list, not on a container of the textarea. The rule now targets `#jargon-list`, restoring the intended monospace face, tighter line height, and unruled background for the term editor.
+- Fixed. The footer now uses the `.colophon-inner` wrapper the stylesheet already defined, matching the masthead composition: the double rule stays full width while the copy holds the 52 rem measure.
+- Removed. The unused `.dial-grade-unit` rule.
+- Accessibility. The bench output box carried `aria-label` without a role, so the name was inert; it now has `role="region"`. Label associations, the arrow key tab model, and the live regions were rechecked. Contrast computed from the tokens: the lowest pair is copper on paper at 4.54 to 1, still above the 4.5 floor, and every other pair clears 6 to 1.
+- Meta. Open Graph title, description, and type were already present, the theme color matches the paper token, and the favicon is an inline SVG. No changes needed.
+- Motion and copy. Reduced motion was already honored and the only animation is the one shot settle, so there is nothing to pause on hidden tabs. No em or en dashes, no emoji, no uppercase kickers.
+- Tests: 55 before the pass, 55 after, all passing. Smoke: 25 checks.

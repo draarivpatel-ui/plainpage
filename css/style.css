@@ -426,7 +426,7 @@ textarea:focus-visible {
   font-style: italic;
 }
 
-.jargon-list textarea { min-height: 12rem; font-family: var(--font-mono); font-size: 0.9rem; line-height: 1.7; background-image: none; }
+#jargon-list { min-height: 12rem; font-family: var(--font-mono); font-size: 0.9rem; line-height: 1.7; background-image: none; }
 
 /* ---------- bench ---------- */
 
@@ -555,8 +555,6 @@ textarea:focus-visible {
   font-variant-numeric: lining-nums tabular-nums;
   min-width: 3.2rem;
 }
-
-.dial-grade-unit { font-family: var(--font-ui); font-size: 0.78rem; color: var(--ink-soft); }
 
 .chip {
   font-family: var(--font-ui);
