@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PlainPage, a Plain Language Studio</title>
+  <meta name="description" content="Paste any text and get readability scores from five published formulas with the arithmetic shown, a jargon radar, a rewrite bench, and an audience dial. Runs entirely in your browser.">
+  <meta name="author" content="Aariv Patel">
+  <meta name="theme-color" content="#f6efe2">
+  <meta property="og:title" content="PlainPage, a Plain Language Studio">
+  <meta property="og:description" content="Readability scores from five published formulas with the arithmetic shown, a jargon radar, a rewrite bench, and an audience dial. Runs entirely in your browser.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6efe2'/%3E%3Ctext x='32' y='47' font-family='Georgia,serif' font-size='44' font-weight='bold' text-anchor='middle' fill='%23a8571e'%3EP%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#studio">Skip to the studio</a>
+
+  <header class="masthead">
+    <div class="masthead-inner">
+      <h1 class="wordmark">PlainPage<span class="wordmark-dot">.</span></h1>
+      <p class="tagline">A plain language studio for educators and community groups. Paste a document, read the numbers, and rewrite with confidence.</p>
+      <p class="byline">A Code for Humanity project by Aariv Patel</p>
+    </div>
+  </header>
+
+  <main id="studio" class="studio">
+
+    <section class="stage" aria-labelledby="stage-title">
+      <h2 id="stage-title" class="stage-title">Start With Your Text</h2>
+      <label class="input-label" for="input-text">Your document</label>
+      <textarea id="input-text" name="document" rows="10" spellcheck="false"
+        placeholder="Paste a letter home, a grant paragraph, a handbook section, or anything else families have to read."></textarea>
+      <div class="stage-row">
+        <div class="stage-samples" role="group" aria-label="Sample documents">
+          <button type="button" class="btn btn-quiet" id="sample-notice">Load the District Notice</button>
+          <button type="button" class="btn btn-quiet" id="sample-letter">Load the Plain Letter</button>
+          <button type="button" class="btn btn-quiet" id="clear-text">Clear the Page</button>
+        </div>
+        <p class="stage-count" id="input-count" aria-live="polite">Nothing pasted yet.</p>
+      </div>
+    </section>
+
+    <div class="tabs-wrap">
+      <div class="tabs" role="tablist" aria-label="Studio panels">
+        <button type="button" class="tab" id="tab-report" role="tab" aria-selected="true" aria-controls="panel-report">Readability Report</button>
+        <button type="button" class="tab" id="tab-jargon" role="tab" aria-selected="false" aria-controls="panel-jargon" tabindex="-1">Jargon Radar</button>
+        <button type="button" class="tab" id="tab-bench" role="tab" aria-selected="false" aria-controls="panel-bench" tabindex="-1">Rewrite Bench</button>
+        <button type="button" class="tab" id="tab-dial" role="tab" aria-selected="false" aria-controls="panel-dial" tabindex="-1">Audience Dial</button>
+      </div>
+    </div>
+
+    <!-- ================= Panel 1, Readability Report ================= -->
+    <section class="panel" id="panel-report" role="tabpanel" aria-labelledby="tab-report" tabindex="0">
+      <h2 class="panel-title">Readability Report</h2>
+      <p class="panel-note">Five published formulas, computed as you type. The arithmetic under each score shows its inputs, so you can check the work line by line.</p>
+
+      <div class="hero-score" id="hero-score">
+        <p class="score-name">Flesch Reading Ease</p>
+        <p class="score-num" id="report-re">--</p>
+        <p class="score-band" id="report-re-band">Paste text to begin</p>
+        <p class="score-math" id="report-re-math">206.835 &minus; (1.015 &times; words per sentence) &minus; (84.6 &times; syllables per word)</p>
+      </div>
+
+      <ul class="grade-grid">
+        <li class="grade-card">
+          <h3 class="grade-name">Flesch-Kincaid Grade Level</h3>
+          <p class="grade-num" id="report-fkgl">--</p>
+          <p class="grade-unit">grade level</p>
+          <p class="grade-math" id="report-fkgl-math">(0.39 &times; words per sentence) + (11.8 &times; syllables per word) &minus; 15.59</p>
+        </li>
+        <li class="grade-card">
+          <h3 class="grade-name">Gunning Fog Index</h3>
+          <p class="grade-num" id="report-fog">--</p>
+          <p class="grade-unit">years of school</p>
+          <p class="grade-math" id="report-fog-math">0.4 &times; (words per sentence + 100 &times; share of words with 3 or more syllables)</p>
+        </li>
+        <li class="grade-card">
+          <h3 class="grade-name">SMOG Grade</h3>
+          <p class="grade-num" id="report-smog">--</p>
+          <p class="grade-unit">years of school</p>
+          <p class="grade-math" id="report-smog-math">Built from polysyllables, 3 or more syllables per word</p>
+        </li>
+        <li class="grade-card">
+          <h3 class="grade-name">Dale-Chall</h3>
+          <p class="grade-num" id="report-dc">--</p>
+          <p class="grade-unit" id="report-dc-label">raw score</p>
+          <p class="grade-math" id="report-dc-math">0.1579 &times; share of words outside the familiar list, plus 0.0496 &times; words per sentence</p>
+        </li>
+      </ul>
+
+      <section class="sub" aria-labelledby="stats-title">
+        <h3 class="sub-title" id="stats-title">Sentence and Syllable Statistics</h3>
+        <dl class="stats-grid">
+          <div class="stat"><dt>Words</dt><dd id="stat-words">0</dd></div>
+          <div class="stat"><dt>Sentences</dt><dd id="stat-sentences">0</dd></div>
+          <div class="stat"><dt>Syllables</dt><dd id="stat-syllables">0</dd></div>
+          <div class="stat"><dt>Words per sentence</dt><dd id="stat-asl">0.0</dd></div>
+          <div class="stat"><dt>Syllables per word</dt><dd id="stat-asw">0.00</dd></div>
+          <div class="stat"><dt>Words with 3 or more syllables</dt><dd id="stat-big">0</dd></div>
+          <div class="stat"><dt>Words outside the familiar list</dt><dd id="stat-hard">0</dd></div>
+          <div class="stat"><dt>Quiet reading time</dt><dd id="stat-time">0.0 min</dd></div>
+        </dl>
+      </section>
+
+      <section class="sub" aria-labelledby="longest-title">
+        <h3 class="sub-title" id="longest-title">Longest Sentences</h3>
+        <p class="sub-note">Readers lose the thread in long sentences first. Each hint names the nearest fair place to cut.</p>
+        <ol class="longest-list" id="report-longest">
+          <li class="longest-empty">The three longest sentences will line up here.</li>
+        </ol>
+      </section>
+    </section>
+
+    <!-- ================= Panel 2, Jargon Radar ================= -->
+    <section class="panel" id="panel-jargon" role="tabpanel" aria-labelledby="tab-jargon" tabindex="0" hidden>
+      <h2 class="panel-title">Jargon Radar</h2>
+      <p class="panel-note">Your own term list scans the text for wording that may lose readers. Each hit shows a plain alternative when the list has one. The starter list is only a start; rewrite it for your community.</p>
+
+      <ol class="jargon-list" id="jargon-hits">
+        <li class="jargon-empty" id="jargon-empty">No terms from your list appear in the text.</li>
+      </ol>
+
+      <section class="sub" aria-labelledby="termlist-title">
+        <h3 class="sub-title" id="termlist-title">Your Term List</h3>
+        <label class="input-label" for="jargon-list">One term per line, then an equals sign and the plain wording. A line with no equals sign is still detected, it just gets no suggested swap.</label>
+        <textarea id="jargon-list" rows="12" spellcheck="false"></textarea>
+        <div class="stage-row">
+          <div class="stage-samples">
+            <button type="button" class="btn" id="jargon-apply">Apply the List</button>
+            <button type="button" class="btn btn-quiet" id="jargon-reset">Restore the Starter List</button>
+          </div>
+          <p class="stage-count">Your list is saved in this browser only.</p>
+        </div>
+        <p class="visually-hidden" role="status" id="jargon-status"></p>
+      </section>
+    </section>
+
+    <!-- ================= Panel 3, Rewrite Bench ================= -->
+    <section class="panel" id="panel-bench" role="tabpanel" aria-labelledby="tab-bench" tabindex="0" hidden>
+      <h2 class="panel-title">Rewrite Bench</h2>
+      <p class="panel-note">Deterministic transforms, never invention. The bench only rearranges what is already on the page and swaps words from the fixture dictionary. Passive voice is flagged with hints instead of rewritten, because naming the doer is a judgment call.</p>
+
+      <fieldset class="bench-options">
+        <legend>Transforms</legend>
+        <label class="check"><input type="checkbox" id="opt-split" checked> Split long sentences, 22 words or more, at a fair conjunction</label>
+        <label class="check"><input type="checkbox" id="opt-words" checked> Replace complex words from the fixture dictionary</label>
+      </fieldset>
+
+      <div class="bench-actions">
+        <button type="button" class="btn btn-strong" id="run-bench">Run the Bench</button>
+        <p class="stage-count" id="bench-status" role="status">The bench has not run yet.</p>
+      </div>
+
+      <div class="bench-scores" id="bench-scores" hidden>
+        <p class="bench-delta" id="bench-delta"></p>
+      </div>
+
+      <section class="sub" aria-labelledby="passives-title">
+        <h3 class="sub-title" id="passives-title">Passive Voice Notes</h3>
+        <ul class="passive-list" id="bench-passives">
+          <li class="empty-row" id="passives-empty">No passive constructions were found, or the bench has not run yet.</li>
+        </ul>
+      </section>
+
+      <section class="sub" aria-labelledby="changes-title">
+        <h3 class="sub-title" id="changes-title">Word Swaps</h3>
+        <ul class="swap-list" id="bench-changes">
+          <li class="empty-row" id="changes-empty">No dictionary swaps yet.</li>
+        </ul>
+      </section>
+
+      <section class="sub" aria-labelledby="after-title">
+        <h3 class="sub-title" id="after-title">After the Bench</h3>
+        <div class="bench-output" id="bench-output" aria-label="Rewritten text" hidden></div>
+        <button type="button" class="btn btn-quiet" id="copy-bench" hidden>Copy the Rewritten Text</button>
+        <p class="visually-hidden" role="status" id="copy-status"></p>
+      </section>
+
+      <section class="sub" aria-labelledby="diff-title">
+        <h3 class="sub-title" id="diff-title">Word by Word Diff</h3>
+        <p class="sub-note">Struck words were removed, copper words were added.</p>
+        <div class="bench-diff" id="bench-diff" hidden></div>
+      </section>
+    </section>
+
+    <!-- ================= Panel 4, Audience Dial ================= -->
+    <section class="panel" id="panel-dial" role="tabpanel" aria-labelledby="tab-dial" tabindex="0" hidden>
+      <h2 class="panel-title">Audience Dial</h2>
+      <p class="panel-note">Choose who you are writing for. Every formula converts to a school grade and is judged against the top of your chosen band. Pass means the text lands at or below it.</p>
+
+      <fieldset class="dial-bands">
+        <legend>Target Reading Band</legend>
+        <label class="radio"><input type="radio" name="dial-band" value="4-5"> Grades 4 and 5</label>
+        <label class="radio"><input type="radio" name="dial-band" value="6-7" checked> Grades 6 and 7</label>
+        <label class="radio"><input type="radio" name="dial-band" value="8-9"> Grades 8 and 9</label>
+        <label class="radio"><input type="radio" name="dial-band" value="10-12"> Grades 10 to 12</label>
+        <label class="radio"><input type="radio" name="dial-band" value="college"> College</label>
+      </fieldset>
+
+      <ol class="dial-rows" id="dial-rows">
+        <li class="dial-empty">Pick a band, paste text, and the verdicts will line up here.</li>
+      </ol>
+      <p class="dial-overall" id="dial-overall" role="status"></p>
+    </section>
+
+  </main>
+
+  <footer class="colophon">
+    <p>PlainPage runs entirely in this page. No network, no accounts, and no text ever leaves your browser.</p>
+    <p>Formulas, Flesch Reading Ease (Flesch, 1948), Flesch-Kincaid Grade Level (Kincaid, Fishburne, Rogers and Chissom, 1975), Gunning Fog (Gunning, 1952), SMOG (McLaughlin, 1969), and Dale-Chall (Dale and Chall, 1948).</p>
+    <p>PlainPage is a Code for Humanity project by Aariv Patel.</p>
+  </footer>
+
+  <noscript>
+    <p class="noscript-note">PlainPage needs JavaScript to compute scores. Everything runs locally in your browser, so it is safe to enable here.</p>
+  </noscript>
+
+  <script src="js/data.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

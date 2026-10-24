@@ -1,0 +1,9 @@
+{
+  "name": "plainpage",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A plain language studio for educators and community groups. Static, offline, zero dependencies.",
+  "scripts": {
+    "test": "node --test tests/"
+  }
+}
