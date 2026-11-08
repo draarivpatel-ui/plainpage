@@ -80,3 +80,14 @@ Aariv Patel. PlainPage is a Code for Humanity project.
 - Meta. Open Graph title, description, and type were already present, the theme color matches the paper token, and the favicon is an inline SVG. No changes needed.
 - Motion and copy. Reduced motion was already honored and the only animation is the one shot settle, so there is nothing to pause on hidden tabs. No em or en dashes, no emoji, no uppercase kickers.
 - Tests: 55 before the pass, 55 after, all passing. Smoke: 25 checks.
+
+## SHRINK Data-URI App 2026-11-07
+
+A compact companion for the Hack Club SHRINK program (`https://shrink.hackclub.com`), which asks for a single-line `data:` URI web app under 3 KB.
+
+- `shrink.html`, the whole app on one line. Paste any text into the textarea and get a live report: word, sentence and syllable counts, Flesch Reading Ease with a plain verdict, Flesch-Kincaid Grade Level, and jargon density measured against a built-in list of 26 heavy terms. It recomputes on every keystroke through the oninput handler. Runs fully offline with no dependencies and no network.
+- `scripts/build-shrink-uri.js`, the builder. It percent-encodes only the bytes a URL parser must treat as special, compares that against a base64 alternative, and writes the shortest valid `data:text/html;charset=utf-8,...` URI. Regenerate with `node scripts/build-shrink-uri.js`.
+- `shrink-data-uri.txt`, the submission payload. One line, no trailing newline, 2069 bytes, strictly under the 3000 byte cap. It decodes back to `shrink.html` byte for byte.
+- `tests/shrink.test.js`, the verification. It checks the size cap, the exact decode round trip, the single-line ASCII source, and then runs the page script inside a DOM stub to confirm the formulas, the counts, the jargon density, and the live recompute. `npm test` runs 62 tests, all passing.
+
+Copy the entire contents of `shrink-data-uri.txt` into the SHRINK submission field or address bar. No em dashes, no en dashes, no emoji, and no banned channel references appear in any of the four deliverables.
