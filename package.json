@@ -4,6 +4,6 @@
   "private": true,
   "description": "A plain language studio for educators and community groups. Static, offline, zero dependencies.",
   "scripts": {
-    "test": "node --test tests/"
+    "test": "node --test"
   }
 }

@@ -27,7 +27,7 @@ The published anchor used in the tests is the widely reproduced worked example "
 
 ## Tests
 
-Run them with `npm test` or `node --test tests/`. Node 18 or newer, no install step.
+Run them with `npm test` or `node --test`. Node 18 or newer, no install step.
 
 - 55 tests, all passing.
 - 138 assertions at runtime, counted by instrumenting the assert module. That is 120 assert statements in the two files, with the syllable table loop running its check 19 times.
