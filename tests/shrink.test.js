@@ -121,6 +121,15 @@ test('counts and formulas match independent hand arithmetic', () => {
   assert.equal(density(r.report), 0);
 });
 
+test('an empty box shows a rest prompt, not fake numbers', () => {
+  const r = run('');
+  assert.ok(r.report.includes('Paste any text'));
+  assert.ok(!r.report.includes('Words: 1'));
+  // Typing real text replaces the prompt with a report.
+  const after = r.change('The cat sat.');
+  assert.ok(after.startsWith('Words: 3'));
+});
+
 test('jargon density is measured against the built-in term list', () => {
   // 4 words, exactly 1 flagged term ("utilize") -> 25.0%.
   const r = run('Please utilize this now.');

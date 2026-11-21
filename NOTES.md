@@ -29,8 +29,8 @@ The published anchor used in the tests is the widely reproduced worked example "
 
 Run them with `npm test` or `node --test tests/`. Node 18 or newer, no install step.
 
-- 55 tests, all passing.
-- 138 assertions at runtime, counted by instrumenting the assert module. That is 120 assert statements in the two files, with the syllable table loop running its check 19 times.
+- 81 tests, all passing.
+- Over 200 assert statements across the suite, covering each formula against published worked examples, the regressions file for abbreviation splitting, Unicode tokens, term boundaries and the passive detector, and the bookmarklet parity group.
 - Total wall time is about 40 milliseconds on the development machine. No network, no timers beyond the run itself, nothing outside `tests/` and `js/` is touched.
 
 Coverage by area. Each readability formula has its own test group, the syllable counter has 19 fixed words, jargon detection has seven groups covering counts, examples, case, boundaries, phrases, sorting, and clean text, and the transforms have groups for word swaps, phrase swaps, deletions with tidying, middle most splitting, untouched short text, no split point sentences, while clause hints, passive detection with and without agents, irregular participles, lookalike rejections, four diff shapes, and the dial verdicts at three bands. A determinism test confirms the same text always produces an identical report.

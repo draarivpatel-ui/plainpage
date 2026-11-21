@@ -48,7 +48,7 @@ function minimalEncode(str) {
 
 const candidates = {
   minimal: PREFIX + minimalEncode(html),
-  base64: PREFIX + ';base64,' + Buffer.from(html, 'utf8').toString('base64'),
+  base64: 'data:text/html;charset=utf-8;base64,' + Buffer.from(html, 'utf8').toString('base64'),
 };
 
 for (const [name, uri] of Object.entries(candidates)) {

@@ -38,14 +38,55 @@
     substantiate: "prove"
   };
 
-  function countSyllables(word) {
-    var clean = String(word || "").toLowerCase().replace(/[^a-z]/g, "");
-    if (!clean) return 0;
-    if (clean.length <= 3) return 1;
-    clean = clean.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, "");
-    clean = clean.replace(/^y/, "");
-    var matches = clean.match(/[aeiouy]{1,2}/g);
-    return matches ? Math.max(1, matches.length) : 1;
+  // Same syllable counter as the studio engine: vowel groups with a hiatus
+  // bonus for ia and ua and a small exception lexicon.
+  var SYLLABLE_EXCEPTIONS = {
+    australian: 4, business: 2, chocolate: 2, evening: 2, every: 2,
+    money: 2, honey: 2, monkey: 2, poem: 2, quiet: 2, science: 2,
+    being: 2, create: 2, idea: 3, area: 3, real: 2, recipe: 3
+  };
+
+  function countSyllables(rawWord) {
+    var word = String(rawWord || "").toLowerCase().replace(/[^a-z]/g, "");
+    if (!word) return 0;
+    if (Object.prototype.hasOwnProperty.call(SYLLABLE_EXCEPTIONS, word)) {
+      return SYLLABLE_EXCEPTIONS[word];
+    }
+    if (word.length <= 2) return 1;
+    var groups = word.match(/[aeiouy]+/g);
+    if (!groups) return 1;
+    var count = groups.length;
+    var hiatus = word.match(/(?<![cst])ia|(?<![cs])ua/g);
+    if (hiatus) count += hiatus.length;
+    if (/e$/.test(word) && !/le$/.test(word) && count > 1) count -= 1;
+    return Math.max(count, 1);
+  }
+
+  // Same sentence splitter as the studio engine: decimals, abbreviations,
+  // initials and dotted acronyms do not end a sentence.
+  function splitSentences(text) {
+    if (!text) return [];
+    var t = String(text);
+    t = t.replace(/(\d)\.(\d)/g, "$1\u0001$2");
+    t = t.replace(/\b(?:[A-Za-z]\.){2,}/g, function (m) { return m.replace(/\./g, "\u0001"); });
+    t = t.replace(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|etc|approx|Inc|Dept|Ave)\.\s/g, "$1\u0001 ");
+    t = t.replace(/\b([A-Z])\.\s/g, "$1\u0001 ");
+    var parts = t.split(/(?<=[.!?])\s+|\n+/);
+    var out = [];
+    for (var i = 0; i < parts.length; i++) {
+      var restored = parts[i].replace(/\u0001/g, ".").trim();
+      if (restored && /[A-Za-z0-9]/.test(restored)) out.push(restored);
+    }
+    return out;
+  }
+
+  // Same word tokenizer as the studio engine: hyphens split compounds,
+  // accented letters stay inside words, digits count.
+  function wordTokensOf(text) {
+    if (!text) return [];
+    var t = String(text).replace(/[-]/g, " ");
+    var matches = t.match(/[\p{L}\p{N}'\u2019]+/gu);
+    return matches ? matches : [];
   }
 
   function analyzeSelection(rawText) {
@@ -64,17 +105,23 @@
       };
     }
 
-    var sentenceParts = text
-      .replace(/([.!?]+)\s+/g, "$1|")
-      .split("|")
-      .map(function (s) { return s.trim(); })
-      .filter(Boolean);
-    var sentences = Math.max(1, sentenceParts.length);
+    var sentences = Math.max(1, splitSentences(text).length);
 
-    var wordTokens = text
-      .toLowerCase()
-      .match(/[a-z]+(?:'[a-z]+)?/g) || [];
-    var words = Math.max(1, wordTokens.length);
+    var wordTokens = wordTokensOf(text).map(function (w) { return w.toLowerCase(); });
+    if (!wordTokens.length) {
+      return {
+        words: 0,
+        sentences: 0,
+        syllables: 0,
+        complexWords: 0,
+        fleschEase: 0,
+        kincaidGrade: 0,
+        gunningFog: 0,
+        smogGrade: 0,
+        jargonHits: []
+      };
+    }
+    var words = wordTokens.length;
 
     var syllables = 0;
     var complexWords = 0;

@@ -39,28 +39,43 @@
 
   /* ---------- sentence and word tokenization ---------- */
 
-  // Periods inside decimals and after common abbreviations do not end a
-  // sentence. We swap them for a private placeholder before splitting.
+  // Periods inside decimals, common abbreviations, dotted initials and
+  // multi letter acronyms do not end a sentence. They are swapped for a
+  // private placeholder before splitting; tidy() shares the protection so
+  // it never capitalizes the word after "e.g." or an initial.
+  const MULTIDOT_RE = /\b(?:[A-Za-z]\.){2,}/g;
+
+  function protectAbbrevs(t) {
+    t = t.replace(/(\d)\.(\d)/g, '$1\u0001$2');
+    t = t.replace(MULTIDOT_RE, function (m) { return m.replace(/\./g, '\u0001'); });
+    t = t.replace(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|etc|approx|Inc|Dept|Ave)\.\s/g, '$1\u0001 ');
+    t = t.replace(/\b([A-Z])\.\s/g, '$1\u0001 ');
+    return t;
+  }
+
+  function unprotectAbbrevs(t) {
+    return t.replace(/\u0001/g, '.');
+  }
+
   function splitSentences(text) {
     if (!text) return [];
-    let t = String(text);
-    t = t.replace(/(\d)\.(\d)/g, '$1\u0001$2');
-    t = t.replace(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|etc|approx|Inc|Dept|Ave)\.\s/g, '$1\u0001 ');
-    const parts = t.split(/(?<=[.!?])\s+|\n+/);
+    const parts = protectAbbrevs(String(text)).split(/(?<=[.!?])\s+|\n+/);
     const out = [];
     for (let i = 0; i < parts.length; i++) {
-      const restored = parts[i].replace(/\u0001/g, '.').trim();
-      if (restored) out.push(restored);
+      const restored = unprotectAbbrevs(parts[i]).trim();
+      // A run of pure punctuation ("!!!") is not a sentence.
+      if (restored && /[\p{L}\p{N}]/u.test(restored)) out.push(restored);
     }
     return out;
   }
 
   // Hyphenated compounds count as their parts, which is how the published
-  // formulas treat them in practice.
+  // formulas treat them in practice. Letters beyond plain ASCII count too,
+  // so accented English words stay whole instead of splitting apart.
   function words(text) {
     if (!text) return [];
     const t = String(text).replace(/[-]/g, ' ');
-    const matches = t.match(/[A-Za-z0-9'\u2019]+/g);
+    const matches = t.match(/[\p{L}\p{N}'\u2019]+/gu);
     return matches ? matches : [];
   }
 
@@ -125,7 +140,7 @@
   // Accept plain inflections of familiar words: plurals, ed, ing, ly.
   function isFamiliar(word) {
     const set = daleSet();
-    const w = String(word || '').toLowerCase().replace(/[^a-z']/g, '');
+    const w = String(word || '').toLowerCase().replace(/\u2019/g, "'").replace(/[^a-z']/g, '');
     if (!w) return true;
     if (set.has(w)) return true;
     if (/ies$/.test(w) && set.has(w.slice(0, -3) + 'y')) return true;
@@ -350,7 +365,7 @@
       const cand = bestCandidate(s);
       let hint;
       if (wc <= 22) {
-        hint = 'Within the long sentence range.';
+        hint = 'Within the 22 word limit, no split needed.';
       } else if (cand) {
         hint = 'Try splitting near the word "' + cand.word + '".';
       } else {
@@ -388,6 +403,13 @@
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
+  // Word boundary lookarounds instead of \b: \b cannot see boundaries after
+  // a non word edge, so a term like "c++" or "c#" would never match.
+  function termPattern(term) {
+    const body = escapeRe(term).replace(/\s+/g, '\\s+');
+    return new RegExp("(?<![\\p{L}\\p{N}'\\u2019])" + body + "(?![\\p{L}\\p{N}'\\u2019])", 'giu');
+  }
+
   function findJargon(text, terms) {
     const sents = splitSentences(text);
     const lower = String(text || '').toLowerCase();
@@ -395,7 +417,7 @@
     for (let i = 0; i < terms.length; i++) {
       const entry = terms[i];
       if (!entry.term || entry.term.length < 2) continue;
-      const pattern = new RegExp('\\b' + escapeRe(entry.term).replace(/\s+/g, '\\s+') + '\\b', 'gi');
+      const pattern = termPattern(entry.term);
       const matches = lower.match(pattern);
       if (!matches) continue;
       let example = '';
@@ -423,12 +445,12 @@
   /* ---------- Rewrite Bench transforms ---------- */
 
   function tidy(text) {
-    let t = String(text || '');
+    let t = protectAbbrevs(String(text || ''));
     t = t.replace(/[ \t]{2,}/g, ' ');
     t = t.replace(/ +([,.;:!?])/g, '$1');
     t = t.trim();
     t = t.replace(/(^|[.!?]\s+)([a-z])/g, function (m, p1, p2) { return p1 + p2.toUpperCase(); });
-    return t;
+    return unprotectAbbrevs(t);
   }
 
   // Word and phrase swaps from the fixture dictionary. Phrases go first so
@@ -441,7 +463,7 @@
     const changes = [];
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
-      const pattern = new RegExp('\\b' + escapeRe(entry.term).replace(/\s+/g, '\\s+') + '\\b', 'gi');
+      const pattern = termPattern(entry.term);
       let count = 0;
       t = t.replace(pattern, function (matched) {
         count += 1;
@@ -451,6 +473,7 @@
       });
       if (count > 0) changes.push({ from: entry.term, to: entry.plain || '(removed)', count: count });
     }
+    if (!changes.length) return { text: String(text || ''), changes: changes };
     return { text: tidy(t), changes: changes };
   }
 
@@ -497,25 +520,52 @@
         totalSplits += 1;
         changed = true;
       }
-      t = rebuilt.join(' ');
       if (!changed) break;
+      t = rebuilt.join(' ');
     }
+    if (!totalSplits) return { text: String(text || ''), splits: 0 };
     return { text: tidy(t), splits: totalSplits };
   }
 
   /* ---------- passive voice ---------- */
 
-  const IRREGULAR_PARTICIPLES = 'made written sung done given taken seen held kept told sent built found brought thought caught taught left felt known grown shown drawn driven eaten fallen forgotten hidden spoken stolen worn'.split(' ');
+  // Irregular participles that do not end in ed or en. The wn endings
+  // (thrown, blown) are here because the ed/en suffix test misses them.
+  const IRREGULAR_PARTICIPLES = 'made written sung done given taken seen held kept told sent built found brought thought caught taught left felt known grown shown drawn driven eaten fallen forgotten hidden spoken stolen worn thrown blown flown sewn mown hewn sown strewn'.split(' ');
 
-  const PASSIVE_RE = /\b(am|is|are|was|were)((?:\s+\w+ly)?\s+)(\w+)(\s+by\s+[^,.;!?]+)?/gi;
+  // The be-verb set covers be/being/been plus the get and become passives.
+  // Group 2 absorbs an optional "being" or "been" and one optional adverb so
+  // "was just signed" and "is being written" still land on the participle.
+  // The "by" agent is lazy and stops at a clause boundary: a preposition, a
+  // subordinator, or a coordinator followed by a determiner or pronoun, so
+  // "signed by the principal and the report was filed" keeps its agent short
+  // and the second clause is still scanned.
+  const PASSIVE_AGENT_END = '\\s+(?:(?:and|but|or|yet|so)\\s+(?:the|a|an|it|its|this|that|these|those|his|her|their|our|your|my|he|she|they|we|who|which|what|when|where|how)\\b|then|when|while|which|that|who|whom|whose|where|because|since|as|if|after|before|until|unless|though|although|in|on|at|into|onto|to|for|with|from|during|through|toward|towards|against|without|within|over|under|between)\\b';
+  const PASSIVE_RE = new RegExp(
+    '\\b(am|is|are|was|were|be|been|being|get|gets|got|become|becomes|became)' +
+    '((?:\\s+(?:being|been))?(?:\\s+\\w+ly|\\s+(?:just|only|recently|already|still|then|also|even|ever|never|often|always|really|quite|nearly|almost|not|now))?\\s+)' +
+    '(\\w+)(\\s+by\\s+[^,.;!?]*?(?=' + PASSIVE_AGENT_END + '|[,.;!?]|$))?',
+    'gi'
+  );
 
   // Words that end in ed or en without being participles. Without this
   // blacklist, "was only seven" reads as a passive.
-  const NON_PARTICIPLES = 'even often seven eleven children men women ten then when green open happen listen garden certain iron oven token linen siren'.split(' ');
+  const NON_PARTICIPLES = new Set('even often seven eleven children men women ten then when green open happen listen garden certain iron oven token linen siren'.split(' '));
+
+  // Common ed/en adjectives. "I am tired" or "the bridge is wooden" is a
+  // state, not a passive, so these only flag when a "by" agent follows
+  // ("were confused by the wording" is a real passive).
+  const PARTICIPIAL_ADJECTIVES = new Set(
+    ('red tired bored confused excited surprised amazed interested worried scared frightened pleased ' +
+    'disappointed embarrassed delighted thrilled satisfied upset annoyed depressed relaxed exhausted ' +
+    'terrified shocked stunned puzzled astonished alarmed concerned troubled bothered disturbed done ' +
+    'married divorced engaged crowded naked sacred wicked learned aged blessed golden wooden ashen ' +
+    'leaden molten rotten maiden barren sudden').split(' ')
+  );
 
   function isParticiple(word) {
     const w = word.toLowerCase();
-    if (NON_PARTICIPLES.indexOf(w) !== -1) return false;
+    if (NON_PARTICIPLES.has(w)) return false;
     if (/(?:ed|en)$/.test(w)) return true;
     return IRREGULAR_PARTICIPLES.indexOf(w) !== -1;
   }
@@ -534,6 +584,9 @@
         const participle = m[3];
         if (!isParticiple(participle)) continue;
         const agent = m[4] ? m[4].replace(/^\s+by\s+/i, '').trim() : null;
+        // Stative adjective reading: skip unless a "by" agent makes it
+        // a real passive ("were confused by the noise").
+        if (!agent && PARTICIPIAL_ADJECTIVES.has(participle.toLowerCase())) continue;
         const beVerb = m[1];
         const verbStart = m.index;
         const verbEnd = m.index + m[1].length + m[2].length + m[3].length;
@@ -550,13 +603,12 @@
           sentence: sentence,
           beVerb: beVerb,
           participle: participle,
-          verb: beVerb + ' ' + participle,
+          verb: sentence.slice(verbStart, verbEnd),
           start: verbStart,
           verbEnd: verbEnd,
           agent: agent,
           active: active
         });
-        if (m[4]) break;
       }
     }
     return findings;
@@ -572,7 +624,10 @@
   }
 
   function normToken(token) {
-    return token.toLowerCase().replace(/[^a-z0-9']/g, '');
+    const n = token.toLowerCase().replace(/[^a-z0-9']/g, '');
+    // A punctuation-only token ("..." vs "!!!") keeps itself so the diff
+    // still shows a change instead of reporting everything equal.
+    return n || token.toLowerCase();
   }
 
   function wordDiff(aText, bText) {
